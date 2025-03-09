@@ -3,7 +3,8 @@ const StorageManager = {
     init() {
         this.save('personajes', ["Alba", "Diego"]);
         this.save('amigos', []);
-        this.save('objetos', []); // Ahora será un array de { nombre, cantidad }
+        // Iniciar con un botiquín por defecto
+        this.save('objetos', [{ nombre: "botiquin", cantidad: 1 }]);
         this.save('lugaresVisitados', []);
     },
 
@@ -60,8 +61,6 @@ const StorageManager = {
 // Manejador de UI
 const UI = {
 	
-	selectedItem: null,
-
     elements: {},
 
     initElements() {
@@ -87,6 +86,8 @@ const UI = {
         return true;
     },
 
+selectedItem: null,
+
     updateCharacters() {
         if (!this.elements.charactersList) return;
 
@@ -103,17 +104,6 @@ const UI = {
         this._renderObjectList(this.elements.objectsList, objetos);
     },
 
-    _renderList(container, items, folder) {
-        if (!container) return;
-        container.innerHTML = "";
-        items.forEach(item => {
-            const img = document.createElement("img");
-            img.src = `${folder}/${item}.jpg`;
-            img.classList.add("personaje-item");
-            container.appendChild(img);
-        });
-    },
-
     _renderObjectList(container, items) {
         if (!container) return;
         container.innerHTML = "";
@@ -128,7 +118,6 @@ const UI = {
             div.onclick = () => this.toggleItemSelection(item.nombre, div);
             container.appendChild(div);
         });
-        // Restaurar selección si existe
         if (this.selectedItem) {
             const selectedDiv = container.querySelector(`[data-item-name="${this.selectedItem}"]`);
             if (selectedDiv) selectedDiv.classList.add('selected');
@@ -137,19 +126,27 @@ const UI = {
 
     toggleItemSelection(itemName, element) {
         if (this.selectedItem === itemName) {
-            // Si ya está seleccionado, deseleccionarlo
             this.selectedItem = null;
             element.classList.remove('selected');
         } else {
-            // Desmarcar el anterior si existe
             if (this.selectedItem) {
                 const prevSelected = document.querySelector('.object-item.selected');
                 if (prevSelected) prevSelected.classList.remove('selected');
             }
-            // Seleccionar el nuevo
             this.selectedItem = itemName;
             element.classList.add('selected');
         }
+    },
+
+    _renderList(container, items, folder) {
+        if (!container) return;
+        container.innerHTML = "";
+        items.forEach(item => {
+            const img = document.createElement("img");
+            img.src = `${folder}/${item}.jpg`;
+            img.classList.add("personaje-item");
+            container.appendChild(img);
+        });
     },
 
     selectItem(itemName, element) {
@@ -233,7 +230,7 @@ const lugares = {
         zona: "bosque",
         acciones: [
             { tipo: "cambio", texto: "Pasear por el bosque", destino: "bosqueArbolMagico", icono: "Fondos/BosqueArbolMagico.jpg" },
-            { tipo: "objeto", texto: "Coger la zanahoria", objeto: "zanahoria", icono: "Objetos/Zanahoria.jpg" }
+            { tipo: "objeto", texto: "Coger la zanahoria", objeto: "zanahoria", icono: "Objetos/zanahoria.jpg" }
         ]
     },
     bosqueArbolMagico: {
@@ -251,11 +248,18 @@ const lugares = {
             { tipo: "cambio", texto: "Acercarse al zorro", destino: "zorroHerido", icono: "Fondos/ZorroHerido.jpg" }
         ]
     },
-    zorroHerido: {
+ zorroHerido: {
         imagen: "Fondos/ZorroHerido.jpg",
         zona: "montaña",
         acciones: [
-            { tipo: "amigo", texto: "Añadir amigo", amigo: "ZorroPolar", icono: "Personajes/ZorroPolar.jpg" },
+           // { tipo: "amigo", texto: "Añadir amigo", amigo: "ZorroPolar", icono: "Personajes/ZorroPolar.jpg" },
+            { tipo: "cambio", texto: "Ir a la montaña", destino: "montaña", icono: "Fondos/Montaña.jpg" }
+        ]
+    },
+    zorroCurado: { // Nuevo lugar tras curar al zorro
+        imagen: "Fondos/ZorroCurado.jpg", // Necesitarás esta imagen
+        zona: "montaña",
+        acciones: [
             { tipo: "cambio", texto: "Ir a la montaña", destino: "montaña", icono: "Fondos/Montaña.jpg" }
         ]
     }
@@ -268,11 +272,12 @@ const Game = {
         bosque2: "Has encontrado un claro en el bosque. ¡Explora con cuidado!",
         bosqueArbolMagico: "Un árbol mágico se alza ante ti. ¿Qué secretos guarda?",
         montaña: "¡Las montañas te saludan! El aire es fresco y la vista increíble.",
-        zorroHerido: "Un zorro herido necesita tu ayuda. ¿Qué harás?"
+        zorroHerido: "Un zorro herido necesita tu ayuda. ¡Selecciona el botiquín y haz clic en él!",
+        zorroCurado: "¡El zorro está curado y te agradece tu ayuda!"
     },
 	
     changeLocation(location) {
-        if (!UI.elements.mainImage) return; // Seguridad adicional
+        if (!UI.elements.mainImage) return;
 
         const current = lugares[location];
         const amigos = StorageManager.get('amigos');
@@ -283,26 +288,42 @@ const Game = {
         if (UI.elements.movementsBar) UI.elements.movementsBar.innerHTML = "";
         if (UI.elements.friendsBar) UI.elements.friendsBar.innerHTML = "";
 
-
         current.acciones
             .filter(accion => !(accion.destino === "zorroHerido" && amigos.includes("ZorroPolar")))
             .forEach(accion => ActionHandler.setupButton(accion, location));
-		
-		// Manejar primera visita
+
         if (StorageManager.isFirstVisit(location)) {
             StorageManager.markAsVisited(location);
             const message = this.locationMessages[location] || "¡Has llegado a un nuevo lugar!";
             this.showPopup(message);
         }
 
-    },
-    tryUseItem(itemName) {
-        if (StorageManager.useItem(itemName)) {
-            const message = `Has usado ${itemName}. ¿Qué quieres que pase ahora?`;
-            this.showPopup(message);
-            UI.selectedItem = null; // Deseleccionar tras usar (esto lo dejamos opcional)
+        // Configurar clic en la imagen solo en zorroHerido
+        UI.elements.mainImage.onclick = null;
+        if (location === "zorroHerido") {
+            UI.elements.mainImage.style.cursor = "pointer";
+            UI.elements.mainImage.onclick = () => this.tryUseItem(UI.selectedItem, location);
         } else {
-            this.showPopup(`No puedes usar ${itemName} ahora.`);
+            UI.elements.mainImage.style.cursor = "default";
+        }
+    },
+	
+
+    tryUseItem(itemName, currentLocation) {
+        if (currentLocation === "zorroHerido") {
+            if (itemName === "botiquin" && StorageManager.useItem("botiquin")) {
+                this.showPopup("¡Has usado el botiquín para curar al zorro!");
+                StorageManager.add("amigos", "ZorroPolar"); // Solo se añade aquí
+                this.changeLocation("zorroCurado");
+                UI.selectedItem = null;
+            } else {
+                this.showPopup("El zorro está herido. ¡Necesitas seleccionar el botiquín!");
+            }
+        } else if (itemName && StorageManager.useItem(itemName)) {
+            this.showPopup(`Has usado ${itemName}, pero no pasa nada aquí.`);
+            UI.selectedItem = null;
+        } else {
+            this.showPopup("No puedes usar eso aquí.");
         }
     },
 	
