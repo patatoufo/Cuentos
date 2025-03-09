@@ -18,18 +18,33 @@ const StorageManager = {
     add(key, item) {
         const items = this.get(key);
         if (key === 'objetos') {
-            // Buscar si el objeto ya existe
             const existingItem = items.find(i => i.nombre === item);
             if (existingItem) {
-                existingItem.cantidad += 1; // Incrementar cantidad si ya existe
+                existingItem.cantidad += 1;
             } else {
-                items.push({ nombre: item, cantidad: 1 }); // Añadir nuevo objeto
+                items.push({ nombre: item, cantidad: 1 });
             }
         } else if (!items.includes(item)) {
-            items.push(item); // Para personajes, amigos y lugaresVisitados
+            items.push(item);
         }
         this.save(key, items);
         if (key !== 'lugaresVisitados') UI.updateCharacters();
+    },
+
+    useItem(itemName) {
+        const items = this.get('objetos');
+        const item = items.find(i => i.nombre === itemName);
+        if (item && item.cantidad > 0) {
+            item.cantidad -= 1;
+            if (item.cantidad === 0) {
+                const index = items.indexOf(item);
+                items.splice(index, 1);
+            }
+            this.save('objetos', items);
+            UI.updateCharacters();
+            return true;
+        }
+        return false;
     },
 
     isFirstVisit(location) {
@@ -44,6 +59,9 @@ const StorageManager = {
 
 // Manejador de UI
 const UI = {
+	
+	selectedItem: null,
+
     elements: {},
 
     initElements() {
@@ -69,7 +87,7 @@ const UI = {
         return true;
     },
 
-updateCharacters() {
+    updateCharacters() {
         if (!this.elements.charactersList) return;
 
         const [personajes, amigos, objetos] = [
@@ -82,7 +100,7 @@ updateCharacters() {
 
         this._renderList(this.elements.charactersList, personajes, "Personajes");
         this._renderList(this.elements.friendsList, amigos, "Personajes");
-        this._renderObjectList(this.elements.objectsList, objetos); // Nueva función para objetos
+        this._renderObjectList(this.elements.objectsList, objetos);
     },
 
     _renderList(container, items, folder) {
@@ -102,12 +120,48 @@ updateCharacters() {
         items.forEach(item => {
             const div = document.createElement("div");
             div.classList.add("object-item");
+            div.dataset.itemName = item.nombre;
             div.innerHTML = `
                 <img src="Objetos/${item.nombre}.jpg" alt="${item.nombre}">
                 <span class="quantity">${item.cantidad}</span>
             `;
+            div.onclick = () => this.toggleItemSelection(item.nombre, div);
             container.appendChild(div);
         });
+        // Restaurar selección si existe
+        if (this.selectedItem) {
+            const selectedDiv = container.querySelector(`[data-item-name="${this.selectedItem}"]`);
+            if (selectedDiv) selectedDiv.classList.add('selected');
+        }
+    },
+
+    toggleItemSelection(itemName, element) {
+        if (this.selectedItem === itemName) {
+            // Si ya está seleccionado, deseleccionarlo
+            this.selectedItem = null;
+            element.classList.remove('selected');
+        } else {
+            // Desmarcar el anterior si existe
+            if (this.selectedItem) {
+                const prevSelected = document.querySelector('.object-item.selected');
+                if (prevSelected) prevSelected.classList.remove('selected');
+            }
+            // Seleccionar el nuevo
+            this.selectedItem = itemName;
+            element.classList.add('selected');
+        }
+    },
+
+    selectItem(itemName, element) {
+        // Desmarcar el anterior
+        if (this.selectedItem) {
+            const prevSelected = document.querySelector('.object-item.selected');
+            if (prevSelected) prevSelected.classList.remove('selected');
+        }
+        // Marcar el nuevo
+        this.selectedItem = itemName;
+        element.classList.add('selected');
+        //Game.tryUseItem(itemName); // Intentar usar el objeto
     },
 
     createActionButton(accion) {
@@ -242,6 +296,16 @@ const Game = {
         }
 
     },
+    tryUseItem(itemName) {
+        if (StorageManager.useItem(itemName)) {
+            const message = `Has usado ${itemName}. ¿Qué quieres que pase ahora?`;
+            this.showPopup(message);
+            UI.selectedItem = null; // Deseleccionar tras usar (esto lo dejamos opcional)
+        } else {
+            this.showPopup(`No puedes usar ${itemName} ahora.`);
+        }
+    },
+	
 	//Función para mostrar popup
     showPopup(message) {
         const popup = document.createElement('div');
