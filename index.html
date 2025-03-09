@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nuestros mapas</title>
+  <style>
+    /* Estilos para la sección notas */
+    .notas {
+      background-color: #bbeafc;
+      padding: 20px;
+      margin-left: 300px;
+      margin-right: 300px;
+      text-align: left;
+      height: 250px;
+    }
+    .boton {
+      padding: 20px;
+      text-align: center;
+    }   
+    button {
+      background-color: #555555;
+      color: #fff;
+      padding: 10px 20px;
+      font-size: 14px;
+      border: none;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #1c5fac;
+    }
+  </style>
+</head>
+<body>
+  <h1>Bienvenido a la Aventura</h1>
+
+  <section class="notas">
+    <p>Versión: 2.0</p>
+    <p>Inicio</p>
+    <ul>
+      <li>Se puede viajar entre distintos sitios</li>
+      <li>Podemos añadir amigos</li>
+      <li>Ciertas acciones no aparecen si ya tenemos al amigo.</li>
+    </ul>
+  </section>
+  
+  <section class="boton">
+    <button onclick="iniciarJuego()">Iniciar</button>
+  </section>
+  
+  <footer>
+    <br><br>
+    <p>© 2024 Alba & Diego Inc. Todos los derechos reservados.</p>
+    <p>© Todas las imágenes generadas con IA.</p>
+  </footer>
+
+  <script>
+    function iniciarJuego() {
+      window.location.href = 'Home.html';
+    }
+  </script>
+</body>
+</html>

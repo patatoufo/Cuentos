@@ -1,0 +1,198 @@
+/* Variables para colores y tamaños consistentes */
+:root {
+  --primary-color: #555555;
+  --hover-color: #1c5fac;
+  --bg-light: #f0f0f0;
+  --bg-gray: lightgray;
+  --bg-blue: lightblue;
+  --border-color: #333;
+  --spacing-sm: 10px;
+  --spacing-md: 20px;
+  --spacing-lg: 50px;
+  --border-radius: 10px;
+  --tooltip-bg: rgba(0, 0, 0, 0.8);
+  --overlay-bg: rgba(255, 255, 255, 0.8);
+}
+
+/* Resetear estilos básicos */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  grid-template-columns: 1fr 300px;
+  grid-template-areas:
+    "personajes personajes"
+    "aventura inventario";
+  min-height: 100vh;
+  font-family: Arial, sans-serif;
+  text-align: center;
+}
+
+/* Estilos de botones genéricos */
+button {
+  background-color: var(--primary-color);
+  color: white;
+  padding: var(--spacing-sm) var(--spacing-md);
+  font-size: 14px;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+button:hover {
+  background-color: var(--hover-color);
+}
+
+/* Contenedor de botones de acción */
+.boton-contenedor {
+  position: relative;
+  display: inline-block;
+}
+
+.boton-lugar {
+  width: 150px;
+  height: 150px;
+  margin: var(--spacing-sm);
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.boton-lugar:hover {
+  transform: scale(1.1);
+}
+
+/* Tooltip */
+.tooltip {
+  visibility: hidden;
+  background-color: var(--tooltip-bg);
+  color: white;
+  text-align: center;
+  padding: 5px var(--spacing-sm);
+  border-radius: 5px;
+  position: absolute;
+  bottom: 110%;
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  font-size: 14px;
+  z-index: 10;
+}
+
+.boton-contenedor:hover .tooltip {
+  visibility: visible;
+}
+
+/* Header con personajes */
+#personajes {
+  grid-area: personajes;
+  background-color: var(--bg-blue);
+  padding: var(--spacing-md); /* Reducido el padding para mejor uso del espacio */
+  display: flex;
+  align-items: flex-start; /* Alinea los elementos al inicio */
+  gap: var(--spacing-md);
+  border-bottom: 2px solid var(--bg-gray);
+}
+
+/* Contenedores de listas dentro de personajes */
+#lista-personajes,
+#lista-amigos {
+  flex: 1; /* Cada lista ocupa el mismo espacio disponible */
+  display: flex;
+  flex-wrap: wrap; /* Permite que los elementos se envuelvan si no caben */
+  gap: var(--spacing-sm);
+}
+
+/* Títulos dentro de personajes */
+#personajes h3 {
+  margin-bottom: var(--spacing-sm);
+}
+
+/* Inventario */
+#inventario {
+  grid-area: inventario;
+  background-color: var(--bg-gray);
+  padding: var(--spacing-sm);
+  overflow-y: auto;
+}
+
+/* Elementos de personajes y objetos */
+.personaje-item {
+  width: 100px;
+  height: 100px;
+  border: 2px solid var(--border-color);
+  border-radius: var(--border-radius);
+  object-fit: cover;
+  transition: transform 0.2s ease;
+}
+
+.personaje-item:hover {
+  transform: scale(1.05);
+}
+
+/* Área principal de aventura */
+#aventura {
+  grid-area: aventura;
+  display: flex;
+  height: 75vh;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+/* Contenedores de imagen y botones */
+#contenedor-imagen,
+#contenedor-botones {
+  width: 50%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+#imagen-principal {
+  max-width: 90%;
+  max-height: 90%;
+  object-fit: contain;
+  background: var(--overlay-bg);
+  padding: var(--spacing-md);
+  border-radius: var(--border-radius);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Barras de acciones */
+#barra-movimientos,
+#barra-amigos {
+  display: flex;
+  justify-content: center;
+  gap: var(--spacing-sm);
+  margin: var(--spacing-sm) 0;
+  flex-wrap: wrap;
+  background: var(--overlay-bg);
+  padding: var(--spacing-sm);
+  border-radius: var(--border-radius);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Zonas específicas */
+.zona-bosque {
+  background: url("Fondos/Bosque1.jpg") no-repeat center center;
+  background-size: cover;
+}
+
+.zona-montaña {
+  background: url("Fondos/Montaña.jpg") no-repeat center center;
+  background-size: cover;
+}
+
+/* Media Queries para responsividad */
+@media (max-width: 768px) {
+  body {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "personajes"
+      "aventura"
