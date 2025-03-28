@@ -237,7 +237,8 @@ const lugares = {
         imagen: "Fondos/BosqueArbolMagico.jpg",
         zona: "bosque",
         acciones: [
-            { tipo: "cambio", texto: "Ir a la montaña", destino: "montaña", icono: "Fondos/Montaña.jpg" }
+            { tipo: "cambio", texto: "Ir a la montaña", destino: "montaña", icono: "Fondos/Montaña.jpg" },
+			{ tipo: "cambio", texto: "Ir a la playa", destino: "playa", icono: "Fondos/Playa.jpg" }
         ]
     },
     montaña: {
@@ -256,13 +257,46 @@ const lugares = {
             { tipo: "cambio", texto: "Ir a la montaña", destino: "montaña", icono: "Fondos/Montaña.jpg" }
         ]
     },
-    zorroCurado: { // Nuevo lugar tras curar al zorro
-        imagen: "Fondos/ZorroCurado.jpg", // Necesitarás esta imagen
+    zorroCurado: { 
+        imagen: "Fondos/ZorroCurado.jpg", 
         zona: "montaña",
         acciones: [
             { tipo: "cambio", texto: "Ir a la montaña", destino: "montaña", icono: "Fondos/Montaña.jpg" }
         ]
+    },
+	    playa: {
+        imagen: "Fondos/Playa.jpg",
+        zona: "playa",
+        acciones: [
+		            { tipo: "cambio", texto: "Volver al arbol", destino: "bosqueArbolMagico", icono: "Fondos/BosqueArbolMagico.jpg" },
+            { tipo: "cambio", texto: "Pasear por la playa", destino: "playa2", icono: "Fondos/Playa2.jpg" }
+        ]
+    },
+	    playa2: {
+        imagen: "Fondos/Playa2.jpg",
+        zona: "playa",
+        acciones: [
+			{ tipo: "cambio", texto: "Pasear por la playa", destino: "playa", icono: "Fondos/Playa.jpg" },
+			{ tipo: "cambio", texto: "Ir a la casa de las focas", destino: "playaFocas", icono: "Fondos/PlayaFocas.jpg" },
+			{ tipo: "objeto", texto: "Coger la pechina", objeto: "pechina", icono: "Objetos/pechina.jpg" }
+        ]
+    },
+	    playaFocas: {
+        imagen: "Fondos/PlayaFocas.jpg",
+        zona: "playa",
+        acciones: [
+            { tipo: "cambio", texto: "Pasear por la playa", destino: "playa", icono: "Fondos/Playa.jpg" },
+			{ tipo: "cambio", texto: "Entrar a la casa", destino: "casaFocas", icono: "Fondos/CasaFocas.jpg" }
+        ]
+    },
+	    casaFocas: {
+        imagen: "Fondos/CasaFocas.jpg",
+        zona: "playa",
+        acciones: [
+            { tipo: "cambio", texto: "Pasear por la playa", destino: "playa", icono: "Fondos/Playa.jpg" }
+        ]
     }
+
 };
 
 // Controlador principal del juego
@@ -289,18 +323,21 @@ const Game = {
         if (UI.elements.friendsBar) UI.elements.friendsBar.innerHTML = "";
 
         current.acciones
-            .filter(accion => !(accion.destino === "zorroHerido" && amigos.includes("ZorroPolar")))
+            .filter(accion => 
+                !(accion.destino === "zorroHerido" && amigos.includes("ZorroPolar")) && // Filtro para zorro
+                !(accion.destino === "casaFocas" && amigos.includes("Foca")) // Filtro para foca
+            )
             .forEach(accion => ActionHandler.setupButton(accion, location));
 
         if (StorageManager.isFirstVisit(location)) {
             StorageManager.markAsVisited(location);
             const message = this.locationMessages[location] || "¡Has llegado a un nuevo lugar!";
-            this.showPopup(message);
+            //this.showPopup(message);
         }
 
         // Configurar clic en la imagen solo en zorroHerido
         UI.elements.mainImage.onclick = null;
-        if (location === "zorroHerido") {
+        if (location === "zorroHerido" || location === "casaFocas") {
             UI.elements.mainImage.style.cursor = "pointer";
             UI.elements.mainImage.onclick = () => this.tryUseItem(UI.selectedItem, location);
         } else {
@@ -319,7 +356,17 @@ const Game = {
             } else {
                 this.showPopup("El zorro está herido. ¡Necesitas seleccionar el botiquín!");
             }
-        } else if (itemName && StorageManager.useItem(itemName)) {
+        } else if (currentLocation === "casaFocas") {
+			if (itemName === "pechina" && StorageManager.useItem("pechina")) {
+                this.showPopup("¡Has regalado la pechina a la foca!");
+                StorageManager.add("amigos", "Foca"); // Solo se añade aquí
+                this.changeLocation("playaFocas");
+                UI.selectedItem = null;
+            } else {
+                this.showPopup("La foca quiere una pechina");
+            }
+			
+		} else if (itemName && StorageManager.useItem(itemName)) {
             this.showPopup(`Has usado ${itemName}, pero no pasa nada aquí.`);
             UI.selectedItem = null;
         } else {

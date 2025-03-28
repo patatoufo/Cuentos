@@ -231,6 +231,11 @@ button:hover {
   background-size: cover;
 }
 
+.zona-playa {
+  background: url("Fondos/Playa.jpg") no-repeat center center;
+  background-size: cover;
+}
+
 /* Estilos del popup */
 .popup {
   position: fixed;
