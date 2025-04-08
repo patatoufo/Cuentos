@@ -222,14 +222,15 @@ const lugares = {
         imagen: "Fondos/Bosque1.jpg",
         zona: "bosque",
         acciones: [
-            { tipo: "cambio", texto: "Pasear por el bosque", destino: "bosque2", icono: "Fondos/Bosque2.jpg" }
+            { tipo: "cambio", texto: "Pasear por el bosque", destino: "bosqueArbolMagico", icono: "Fondos/BosqueArbolMagico.jpg" }
         ]
     },
     bosque2: {
         imagen: "Fondos/Bosque2.jpg",
         zona: "bosque",
         acciones: [
-            { tipo: "cambio", texto: "Pasear por el bosque", destino: "bosqueArbolMagico", icono: "Fondos/BosqueArbolMagico.jpg" },
+            { tipo: "cambio", texto: "Volver al arbol", destino: "bosqueArbolMagico", icono: "Fondos/BosqueArbolMagico.jpg" },
+			{ tipo: "cambio", texto: "Acercarse al conejo", destino: "bosqueConejo", icono: "Fondos/BosqueConejo.jpg" },
             { tipo: "objeto", texto: "Coger la zanahoria", objeto: "zanahoria", icono: "Objetos/zanahoria.jpg" }
         ]
     },
@@ -238,9 +239,25 @@ const lugares = {
         zona: "bosque",
         acciones: [
             { tipo: "cambio", texto: "Ir a la montaña", destino: "montaña", icono: "Fondos/Montaña.jpg" },
-			{ tipo: "cambio", texto: "Ir a la playa", destino: "playa", icono: "Fondos/Playa.jpg" }
+			{ tipo: "cambio", texto: "Ir a la playa", destino: "playa", icono: "Fondos/Playa.jpg" },
+			{ tipo: "cambio", texto: "Pasear por el bosque", destino: "bosque2", icono: "Fondos/Bosque2.jpg" }
         ]
     },
+    bosqueConejo: {
+        imagen: "Fondos/BosqueConejo.jpg",
+        zona: "bosque",
+        acciones: [
+            { tipo: "cambio", texto: "Volver al arbol", destino: "bosqueArbolMagico", icono: "Fondos/BosqueArbolMagico.jpg" }
+        ]
+    },
+    bosqueConejoContento: {
+        imagen: "Fondos/BosqueConejoContento.jpg",
+        zona: "bosque",
+        acciones: [
+            { tipo: "cambio", texto: "Volver al arbol", destino: "bosqueArbolMagico", icono: "Fondos/BosqueArbolMagico.jpg" }
+        ]
+    },
+	
     montaña: {
         imagen: "Fondos/Montaña.jpg",
         zona: "montaña",
@@ -325,7 +342,8 @@ const Game = {
         current.acciones
             .filter(accion => 
                 !(accion.destino === "zorroHerido" && amigos.includes("ZorroPolar")) && // Filtro para zorro
-                !(accion.destino === "casaFocas" && amigos.includes("Foca")) // Filtro para foca
+                !(accion.destino === "casaFocas" && amigos.includes("Foca")) && // Filtro para foca
+				!(accion.destino === "bosqueConejo" && amigos.includes("Conejo")) // Filtro para foca
             )
             .forEach(accion => ActionHandler.setupButton(accion, location));
 
@@ -337,7 +355,7 @@ const Game = {
 
         // Configurar clic en la imagen solo en zorroHerido
         UI.elements.mainImage.onclick = null;
-        if (location === "zorroHerido" || location === "casaFocas") {
+        if (location === "zorroHerido" || location === "casaFocas" || location === "bosqueConejo" ) {
             UI.elements.mainImage.style.cursor = "pointer";
             UI.elements.mainImage.onclick = () => this.tryUseItem(UI.selectedItem, location);
         } else {
@@ -364,6 +382,16 @@ const Game = {
                 UI.selectedItem = null;
             } else {
                 this.showPopup("La foca quiere una pechina");
+            }
+			
+		} else if (currentLocation === "bosqueConejo") {
+			if (itemName === "zanahoria" && StorageManager.useItem("zanahoria")) {
+                this.showPopup("¡Has regalado una zanahoria al conejo!");
+                StorageManager.add("amigos", "Conejo"); // Solo se añade aquí
+                this.changeLocation("bosqueConejoContento");
+                UI.selectedItem = null;
+            } else {
+                this.showPopup("El conejo quiere una zanahoria");
             }
 			
 		} else if (itemName && StorageManager.useItem(itemName)) {
